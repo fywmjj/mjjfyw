@@ -30,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
+      # 如果您需要在客户端组件中使用环境变量，请添加以下内容
+      NEXT_PUBLIC_NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -75,8 +77,17 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+      - name: Debug environment
+        run: |
+          echo "NODE_ENV: $NODE_ENV"
+          echo "NOTION_PAGE_ID is set: $(if [ -n "$NOTION_PAGE_ID" ]; then echo "Yes"; else echo "No"; fi)"
+          echo "NEXT_PUBLIC_NOTION_PAGE_ID is set: $(if [ -n "$NEXT_PUBLIC_NOTION_PAGE_ID" ]; then echo "Yes"; else echo "No"; fi)"
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
+        env:
+          # 直接在构建步骤中重新定义环境变量，确保它们在构建过程中可用
+          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
+          NEXT_PUBLIC_NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
